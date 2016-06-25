@@ -57,25 +57,25 @@ def process_args(a, b, c, d, e):
             # Sync contacts
         finally:
             mutex_db_1.release()
-    else if b:
+    elif b:
         mutex_db_1.acquire()
         try:
             # Fetch location data on contacts
         finally:
             mutex_db_1.release()
-    else if c:
+    elif c:
         mutex_db_2.acquire()
         try:
             # Fetch reviews on areas
         finally:
             mutex_db_2.release()
-    else if d:
+    elif d:
         mutex_db_2.acquire()
         try:
             # Send reviews about places
         finally:
             mutex_db_2.release()
-    else if e:
+    elif e:
         mutex_db_1.acquire()
         try:
             # Send Save Our Souls Call
