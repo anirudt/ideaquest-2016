@@ -24,6 +24,7 @@ from BaseHTTPServer import HTTPServer
 import socket
 import json
 from threading import Thread, Lock
+import worker
 
 mutex_db_1 = Lock()
 mutex_db_2 = Lock()
@@ -54,6 +55,7 @@ def process_args(a, b, c, d, e):
     if a:
         mutex_db_1.acquire()
         try:
+            worker.sync_contacts(self_id, list_contacts, location)
             # Sync contacts
         finally:
             mutex_db_1.release()
@@ -132,7 +134,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # We will need location and contact number (ID) for any action!
         p_x = form['p_x']
         p_y = form['p_y']
-        self_id = form['seld_id']
+        self_id = form['self_id']
 
         # Additional Data
         userdata = form['userdata']
