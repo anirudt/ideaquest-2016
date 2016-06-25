@@ -46,14 +46,14 @@ else:
 
 
 
-def process_args(a, b, c, d, e):
+def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
     """
     Decisive function to process App side arguments
     and employ server side functionality to make
     things work.
     """
     if a:
-        mutex_db_1.acquire()
+        mutex_db_1.acquire() 
         try:
             worker.sync_contacts(self_id, list_contacts, location)
             # Sync contacts
@@ -70,12 +70,14 @@ def process_args(a, b, c, d, e):
         mutex_db_2.acquire()
         try:
             # Fetch reviews on areas
+            return worker.fetch_reviews_location(self_id, location)
         finally:
             mutex_db_2.release()
     elif d:
         mutex_db_2.acquire()
         try:
             # Send reviews about places
+            worker.add_review(self_id, location, review)
         finally:
             mutex_db_2.release()
     elif e:
@@ -139,19 +141,22 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # We will need location and contact number (ID) for any action!
         p_x = form['p_x']
         p_y = form['p_y']
+        location = (p_x, p_y)
         self_id = form['self_id']
 
         # Additional Data
-        userdata = form['userdata']
+        review = form['review']
 
         #TODO: Do all database level management, and computation wrt client's request
-        process_args(bool_contacts_send, bool_fetch_friends,\
-                     bool_fetch_reviews, bool_give_reviews,\
-                     bool_sos_call)
-        
+        ret = {}
+        ret['result'] = process_args(bool_contacts_send, bool_fetch_friends,\
+                        bool_fetch_reviews, bool_give_reviews,\
+                        bool_sos_call, self_id, location, review, list_contacts)
 
+        g = open('send_client.json', 'wb')
+        json.dump(ret, g)
         #TODO: And, give result back to client
-        self.wfile.write(0)
+        self.wfile.write(json.dumps(ret))
         
 class SecureThreadedHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     """ Handles Multi-Threaded HTTP Server requests """
