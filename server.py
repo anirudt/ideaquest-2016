@@ -81,13 +81,17 @@ def process_args(a, b, c, d, e):
     elif e:
         mutex_db_1.acquire()
         try:
+            # For now, we do exactly what we are doing for case 1
+            return worker.fetch_friends_location(self_id, location)
             # Send Save Our Souls Call
         finally:
             mutex_db_1.release()
     else:
         mutex_db_1.acquire()
         try:
-            # Default: Just sync up location of the user
+            # Default: Just sync up location of the user and
+            #          set status to online
+            worker.sync_location(self_id, location)
         finally:
             mutex_db_1.release()
 

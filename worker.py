@@ -6,6 +6,7 @@ import time
 Some DEFINES
 """
 radius_threshold = 5
+timeout          = 1000
 
 
 """
@@ -67,14 +68,22 @@ def fetch_friends_location(self_id, location):
     # Set the location
     people[self_id]['location'] = location
     people[self_id]['online'] = 1
-    people[self_id]['time_updated'] = time.time()
+    people[self_id]['time_updated'] = now = time.time()
     center = location
     friends = people[self_id]['friends']
     nearby_friends = []
     for f in friends:
+        if people[f]['time_updated'] - now > timeout:
+            people[f]['online'] = 0
+            people[f]['time_updated'] = time.time()
         if people[f]['online'] && distance(people[f]['location'], center) <= threshold:
             nearby_friends.append([self_id, people[f]['location']])
     return nearby_friends
+
+def sync_location(self_id, location):
+    people[self_id]['location'] = location
+    people[self_id]['online'] = 1
+    people[self_id]['time_updated'] = time.time()
 
 if __name__ == '__main__':
     main()
