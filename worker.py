@@ -57,7 +57,7 @@ def distance(p1, p2):
     return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5
 
 def sync_contacts(self_id, list_contacts, location):
-    with open('people.json', 'rb') as g:
+    with op en('people.json', 'rb') as g:
         people = json.load(g)
     people[self_id]['friends'] = list_contacts
     people[self_id]['location'] = location
@@ -132,6 +132,28 @@ def fetch_reviews_location(self_id, location):
     with open('reviews.json', 'wb') as g:
         json.dump(reviews, g)
     return nearby_reviews
+
+def add_review(self_id, location, review):
+    with open('reviews.json', 'rb') as g:
+        reviews = json.load(g)
+    reviews[location] = {\
+        self_id : [review, time.time()]\
+        }
+    
+    with open('people.json', 'rb') as g:
+        people = json.load(g)
+    people[self_id]['online'] = 1
+    people[self_id]['time_updated'] = time.time()
+
+    for f in friends:
+        # Mandatory Online/Offline refresh
+        if people[f]['time_updated'] - now > timeout:
+            people[f]['online'] = 0
+            people[f]['time_updated'] = time.time()
+    with open('people.json', 'wb') as g:
+        json.dump(people, g)
+    with open('reviews.json', 'wb') as g:
+        json.dump(reviews, g)
 
 def sync_location(self_id, location):
     with open('people.json', 'rb') as g:
