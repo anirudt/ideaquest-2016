@@ -22,6 +22,7 @@ import BaseHTTPServer
 from SocketServer import BaseServer
 from BaseHTTPServer import HTTPServer
 import socket
+import json
 
 '''
 Port handling
@@ -38,11 +39,27 @@ else:
     PORT = 443
     I = ""
 
-#TODO: Do DB work here.
-files = [f for f in os.listdir('.') if os.path.isfile(f)]
-for f in files:
-    if f=='server.log':
-        os.remove('server.log')
+
+
+def process_args(a, b, c, d, e):
+    """
+    Decisive function to process App side arguments
+    and employ server side functionality to make
+    things work.
+    """
+    if a:
+        # Sync contacts
+    else if b:
+        # Fetch location data on contacts
+    else if c:
+        # Fetch reviews on areas
+    else if d:
+        # Send reviews about places
+    else if e:
+        # Send Save Our Souls Call
+    else:
+        # Default: Just sync up location of the user
+
 
 class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def setup(self):
@@ -76,19 +93,31 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         logging.warning("==========POST VALUES=========")
         logging.warning("\n")
 
-        # User authentication
-        auth = form.getvalue('auth')            # To be given in the class as an OTP
-        roll = form.getvalue('roll')            # Roll no. of the student
-        password = form.getvalue('pass')        # Some kind of password alloted to a student
 
-        print auth, roll, password
-        #TODO: Perform checking and validation, and increase the ref count
-        if auth == str(auth_otp):
-            g.write(roll+"\t"+password+"\n")
-            time.sleep(10)
+        # List of all Boolean variables, 1 if True | 0 if False
+        bool_contacts_send = form['contacts_send']
+        bool_fetch_friends = form['fetch_friends']
+        bool_fetch_reviews = form['fetch_reviews']
+        bool_give_reviews  = form['give_reviews']
+        bool_sos_call      = form['sos_call']
 
-        print "Completing attendance"
+        # We will need location and contact number (ID) for any action!
+        p_x = form['p_x']
+        p_y = form['p_y']
+        self_id = form['seld_id']
 
+        # Additional Data
+        userdata = form['userdata']
+
+        #TODO: Do all database level management, and computation wrt client's request
+        process_args(bool_contacts_send, bool_fetch_friends,\
+                     bool_fetch_reviews, bool_give_reviews,\
+                     bool_sos_call)
+        
+
+        #TODO: And, give result back to client
+        self.wfile.write(0)
+        
 class SecureThreadedHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     """ Handles Multi-Threaded HTTP Server requests """
     def __init__(self, server_address, HandlerClass):
