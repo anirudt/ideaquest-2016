@@ -1,6 +1,7 @@
 import os
 from threading import Thread, Lock
 import time
+import json
 
 """
 Some DEFINES
@@ -38,14 +39,14 @@ people["2222222222"] = {
         'time_updated': 0
          }
 """
-# TODO: load the Actual database from a file
-
 
 # HELPER FUNCTION
 def distance(p1, p2):
     return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5
 
 def sync_contacts(self_id, list_contacts, location):
+    with open('people.json', 'rb') as g:
+        people = json.load(g)
     people[self_id]['friends'] = list_contacts
     people[self_id]['location'] = location
     people[self_id]['online'] = 1
@@ -63,8 +64,19 @@ def sync_contacts(self_id, list_contacts, location):
             people[contact] = dummy
             people[contact][time_updated] = time.time()
 
+    # Mandatory Online/Offline refresh
+    for f in people[self_id]['friends']:
+        if people[f]['time_updated'] - now > timeout:
+            people[f]['online'] = 0
+            people[f]['time_updated'] = time.time()
+
+    with open('people.json', 'wb') as g:
+        json.dump(people, g)
+
 
 def fetch_friends_location(self_id, location):
+    with open('people.json', 'rb') as g:
+        people = json.load(g)
     # Set the location
     people[self_id]['location'] = location
     people[self_id]['online'] = 1
@@ -72,18 +84,33 @@ def fetch_friends_location(self_id, location):
     center = location
     friends = people[self_id]['friends']
     nearby_friends = []
+
     for f in friends:
+        # Mandatory Online/Offline refresh
         if people[f]['time_updated'] - now > timeout:
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
         if people[f]['online'] && distance(people[f]['location'], center) <= threshold:
             nearby_friends.append([self_id, people[f]['location']])
+    with open('people.json', 'wb') as g:
+        json.dump(people, g)
     return nearby_friends
 
+
 def sync_location(self_id, location):
+    with open('people.json', 'rb') as g:
+        people = json.load(g)
     people[self_id]['location'] = location
     people[self_id]['online'] = 1
     people[self_id]['time_updated'] = time.time()
+
+    # Mandatory Online/Offline refresh
+    for f in people[self_id]['friends']:
+        if people[f]['time_updated'] - now > timeout:
+            people[f]['online'] = 0
+            people[f]['time_updated'] = time.time()
+    with open('people.json', 'wb') as g:
+        json.dump(people, g)
 
 if __name__ == '__main__':
     main()
