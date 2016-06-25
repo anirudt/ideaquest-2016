@@ -23,6 +23,10 @@ from SocketServer import BaseServer
 from BaseHTTPServer import HTTPServer
 import socket
 import json
+from threading import Thread, Lock
+
+mutex_db_1 = Lock()
+mutex_db_2 = Lock()
 
 '''
 Port handling
@@ -48,17 +52,41 @@ def process_args(a, b, c, d, e):
     things work.
     """
     if a:
-        # Sync contacts
+        mutex_db_1.acquire()
+        try:
+            # Sync contacts
+        finally:
+            mutex_db_1.release()
     else if b:
-        # Fetch location data on contacts
+        mutex_db_1.acquire()
+        try:
+            # Fetch location data on contacts
+        finally:
+            mutex_db_1.release()
     else if c:
-        # Fetch reviews on areas
+        mutex_db_2.acquire()
+        try:
+            # Fetch reviews on areas
+        finally:
+            mutex_db_2.release()
     else if d:
-        # Send reviews about places
+        mutex_db_2.acquire()
+        try:
+            # Send reviews about places
+        finally:
+            mutex_db_2.release()
     else if e:
-        # Send Save Our Souls Call
+        mutex_db_1.acquire()
+        try:
+            # Send Save Our Souls Call
+        finally:
+            mutex_db_1.release()
     else:
-        # Default: Just sync up location of the user
+        mutex_db_1.acquire()
+        try:
+            # Default: Just sync up location of the user
+        finally:
+            mutex_db_1.release()
 
 
 class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
