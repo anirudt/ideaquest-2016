@@ -63,6 +63,7 @@ def process_args(a, b, c, d, e):
         mutex_db_1.acquire()
         try:
             # Fetch location data on contacts
+            return worker.fetch_friends_location(self_id, location)
         finally:
             mutex_db_1.release()
     elif c:

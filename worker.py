@@ -35,10 +35,14 @@ people["2222222222"] = {
         'friends': ["1111111111", "0000000000"],
         'online': 1,
         'time_updated': 0
-        }
+         }
 """
 # TODO: load the Actual database from a file
 
+
+# HELPER FUNCTION
+def distance(p1, p2):
+    return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5
 
 def sync_contacts(self_id, list_contacts, location):
     people[self_id]['friends'] = list_contacts
@@ -60,6 +64,17 @@ def sync_contacts(self_id, list_contacts, location):
 
 
 def fetch_friends_location(self_id, location):
+    # Set the location
+    people[self_id]['location'] = location
+    people[self_id]['online'] = 1
+    people[self_id]['time_updated'] = time.time()
+    center = location
+    friends = people[self_id]['friends']
+    nearby_friends = []
+    for f in friends:
+        if people[f]['online'] && distance(people[f]['location'], center) <= threshold:
+            nearby_friends.append([self_id, people[f]['location']])
+    return nearby_friends
 
 if __name__ == '__main__':
     main()
