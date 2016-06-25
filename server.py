@@ -44,6 +44,20 @@ else:
     PORT = 443
     I = ""
 
+"""
+Form Input Attributes:
+
+1. contacts_send
+2. fetch_friends
+3. fetch_reviews
+4. give_reviews
+5. sos_call
+6. px
+7. py
+8. self_id
+9. review
+
+"""
 
 
 def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
@@ -52,35 +66,36 @@ def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
     and employ server side functionality to make
     things work.
     """
-    if a:
+    print a, b, c, d, e
+    if a == "on":
         mutex_db_1.acquire() 
         try:
             worker.sync_contacts(self_id, list_contacts, location)
             # Sync contacts
         finally:
             mutex_db_1.release()
-    elif b:
+    elif b == "on":
         mutex_db_1.acquire()
         try:
             # Fetch location data on contacts
             return worker.fetch_friends_location(self_id, location)
         finally:
             mutex_db_1.release()
-    elif c:
+    elif c == "on":
         mutex_db_2.acquire()
         try:
             # Fetch reviews on areas
             return worker.fetch_reviews_location(self_id, location)
         finally:
             mutex_db_2.release()
-    elif d:
+    elif d == "on":
         mutex_db_2.acquire()
         try:
             # Send reviews about places
             worker.add_review(self_id, location, review)
         finally:
             mutex_db_2.release()
-    elif e:
+    elif e == "on":
         mutex_db_1.acquire()
         try:
             # For now, we do exactly what we are doing for case 1
@@ -119,33 +134,42 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.send_response(200, 'OK')                       #Handshaking Signals
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        reply = open('reply.html', 'r')
-        self.wfile.write(reply.read())
         form = cgi.FieldStorage(
                 fp=self.rfile,
                 headers=self.headers,
                 environ={'REQUEST_METHOD':"POST",
                 'CONTENT_TYPE':self.headers['Content-Type'],
-                })
+                },
+                keep_blank_values = 1
+                )
         logging.warning("==========POST VALUES=========")
         logging.warning("\n")
 
 
         # List of all Boolean variables, 1 if True | 0 if False
-        bool_contacts_send = form['contacts_send']
-        bool_fetch_friends = form['fetch_friends']
-        bool_fetch_reviews = form['fetch_reviews']
-        bool_give_reviews  = form['give_reviews']
-        bool_sos_call      = form['sos_call']
+        print form
+        bool_contacts_send = bool_fetch_friends = bool_fetch_reviews =\
+                bool_give_reviews = bool_sos_call = ""
+        if form.has_key('contacts_send'):
+            bool_contacts_send = form['contacts_send'].value
+        if form.has_key('fetch_friends'):
+            bool_fetch_friends = form['fetch_friends'].value
+        if form.has_key('fetch_reviews'):
+            bool_fetch_reviews = form['fetch_reviews'].value
+        if form.has_key('give_reviews'):
+            bool_give_reviews  = form['give_reviews'].value
+        if form.has_key('sos_call'):
+            bool_sos_call      = form['sos_call'].value
+        list_contacts = ""
 
         # We will need location and contact number (ID) for any action!
-        p_x = form['p_x']
-        p_y = form['p_y']
-        location = (p_x, p_y)
-        self_id = form['self_id']
+        px = int(form['px'].value)
+        py = int(form['py'].value)
+        location = tuple([px, py])
+        self_id = form['self_id'].value
 
         # Additional Data
-        review = form['review']
+        review = form['review'].value
 
         #TODO: Do all database level management, and computation wrt client's request
         ret = {}
@@ -157,6 +181,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         json.dump(ret, g)
         #TODO: And, give result back to client
         self.wfile.write(json.dumps(ret))
+
         
 class SecureThreadedHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     """ Handles Multi-Threaded HTTP Server requests """
