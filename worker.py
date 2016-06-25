@@ -6,14 +6,15 @@ import json
 """
 Some DEFINES
 """
-radius_threshold = 5
+review_threshold = 10
+friends_threshold = 5
 timeout          = 1000
 
 
 """
 FORMAT of the "People" Database
 
-The people's database has the self location and the list of friends.
+The people's database has the self location and the list of friends, hashable by contact no.
 
 The database needs to be consistent, i.e. there should be
 an entry for every friend of yours, even if we have or do
@@ -38,6 +39,17 @@ people["2222222222"] = {
         'online': 1,
         'time_updated': 0
          }
+
+FORMAT of the "Reviews" Database
+
+The reviews database has the self location and list of reviews, hashable by location.
+
+reviews = {}
+review[(0, 0)] = {
+        '0000000000' : ["This is a good place", 100],
+        '1111111111' : ["This is a great place", 200]
+}
+The members of the list are the review and the timestamp respectively.
 """
 
 # HELPER FUNCTION
@@ -90,12 +102,36 @@ def fetch_friends_location(self_id, location):
         if people[f]['time_updated'] - now > timeout:
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
-        if people[f]['online'] && distance(people[f]['location'], center) <= threshold:
+        if people[f]['online'] && distance(people[f]['location'], center) <= friends_threshold:
             nearby_friends.append([self_id, people[f]['location']])
     with open('people.json', 'wb') as g:
         json.dump(people, g)
-    return nearby_friends
+     return nearby_friends
 
+def fetch_reviews_location(self_id, location):
+    with open('reviews.json', 'rb') as g:
+        reviews = json.load(g)
+    with open('people.json', 'rb') as g:
+        people = json.load(g)
+    nearby_reviews = []
+    for locn in reviews.keys():
+        if distance(locn, location) < review_threshold:
+            for idx in reviews[locn]:
+                nearby_reviews.append([idx, reviews[locn][idx][0], reviews[locn][idx][1]])
+
+    # Need to update online status!
+    people[self_id]['online'] = 1
+    people[self_id]['time_updated'] = time.time()
+    for f in friends:
+        # Mandatory Online/Offline refresh
+        if people[f]['time_updated'] - now > timeout:
+            people[f]['online'] = 0
+            people[f]['time_updated'] = time.time()
+    with open('people.json', 'wb') as g:
+        json.dump(people, g)
+    with open('reviews.json', 'wb') as g:
+        json.dump(reviews, g)
+    return nearby_reviews
 
 def sync_location(self_id, location):
     with open('people.json', 'rb') as g:
