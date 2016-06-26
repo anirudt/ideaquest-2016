@@ -100,7 +100,7 @@ def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
         try:
             # For now, we do exactly what we are doing for case 1
             return worker.fetch_friends_location(self_id, location)
-            # Send Save Our Souls Call
+        # Send Save Our Souls Call
         finally:
             mutex_db_1.release()
     else:
@@ -138,8 +138,8 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 fp=self.rfile,
                 headers=self.headers,
                 environ={'REQUEST_METHOD':"POST",
-                'CONTENT_TYPE':self.headers['Content-Type'],
-                },
+                    'CONTENT_TYPE':self.headers['Content-Type'],
+                    },
                 keep_blank_values = 1
                 )
         logging.warning("==========POST VALUES=========")
@@ -160,7 +160,9 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             bool_give_reviews  = form['give_reviews'].value
         if form.has_key('sos_call'):
             bool_sos_call      = form['sos_call'].value
-        list_contacts = ""
+
+        ret = json.loads(form['contact_file'].value)
+        list_contacts = ret['contacts']
 
         # We will need location and contact number (ID) for any action!
         px = int(form['px'].value)
@@ -174,15 +176,15 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         #TODO: Do all database level management, and computation wrt client's request
         ret = {}
         ret['result'] = process_args(bool_contacts_send, bool_fetch_friends,\
-                        bool_fetch_reviews, bool_give_reviews,\
-                        bool_sos_call, self_id, location, review, list_contacts)
+                bool_fetch_reviews, bool_give_reviews,\
+                bool_sos_call, self_id, location, review, list_contacts)
 
         g = open('send_client.json', 'wb')
         json.dump(ret, g)
         #TODO: And, give result back to client
         self.wfile.write(json.dumps(ret))
 
-        
+
 class SecureThreadedHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     """ Handles Multi-Threaded HTTP Server requests """
     def __init__(self, server_address, HandlerClass):
@@ -195,7 +197,7 @@ class SecureThreadedHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPS
         ctx.use_privatekey_file (fpem)
         ctx.use_certificate_file(fpem)
         self.socket = SSL.Connection(ctx, socket.socket(self.address_family,
-                                                        self.socket_type))
+            self.socket_type))
         self.server_bind()
         self.server_activate()
 

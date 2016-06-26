@@ -59,22 +59,23 @@ def distance(p1, p2):
 def sync_contacts(self_id, list_contacts, location):
     with open('people.json', 'rb') as g:
         people = json.load(g)
-    people[self_id]['friends'] = list_contacts
-    people[self_id]['location'] = location
-    people[self_id]['online'] = 1
-    people[self_id]['time_updated'] = time.time()
-
-    # Handle all contacts which have had no prev data
     dummy = {
         'location': None,\
         'friends': [self_id],\
         'online': 0,\
         'time_updated': 0\
         }
+    if people.get(self_id) is None:
+      people[self_id] = dummy
+    people[self_id]['friends'] = list_contacts
+    people[self_id]['location'] = location
+    people[self_id]['online'] = 1
+    people[self_id]['time_updated'] = now = time.time()
+
+    # Handle all contacts which have had no prev data
     for contact in list_contacts:
         if people.get(contact) is None:
             people[contact] = dummy
-            people[contact][time_updated] = time.time()
 
     # Mandatory Online/Offline refresh
     for f in people[self_id]['friends']:
