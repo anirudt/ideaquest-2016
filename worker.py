@@ -1,4 +1,5 @@
 import os
+import ast
 from threading import Thread, Lock
 import time
 import json
@@ -121,15 +122,16 @@ def fetch_reviews_location(self_id, location):
     with open('people.json', 'rb') as g:
         people = json.load(g)
     nearby_reviews = []
-    for locn in reviews.keys():
+    for str_locn in reviews.keys():
+        locn = ast.literal_eval(str_locn)
         if distance(locn, location) < review_threshold:
-            for idx in reviews[locn]:
-                nearby_reviews.append([idx, reviews[locn][idx][0], reviews[locn][idx][1]])
+            for idx in reviews[str_locn]:
+                nearby_reviews.append([idx, reviews[str_locn][idx][0], reviews[str_locn][idx][1]])
 
     # Need to update online status!
     people[self_id]['online'] = 1
-    people[self_id]['time_updated'] = time.time()
-    for f in friends:
+    people[self_id]['time_updated'] = now = time.time()
+    for f in people[self_id]['friends']:
         # Mandatory Online/Offline refresh
         if people[f]['online'] and people[f]['time_updated'] - now > timeout:
             people[f]['online'] = 0
@@ -137,22 +139,23 @@ def fetch_reviews_location(self_id, location):
     with open('people.json', 'wb') as g:
         json.dump(people, g)
     with open('reviews.json', 'wb') as g:
-        json.dump(reviews, g)
+        json.dump({str(k): v for k, v in reviews.iteritems()}, g)
     return nearby_reviews
 
 def add_review(self_id, location, review):
     with open('reviews.json', 'rb') as g:
         reviews = json.load(g)
-    reviews[location] = {\
+    reviews[str(location)] = {\
         self_id : [review, time.time()]\
         }
+    print reviews
     
     with open('people.json', 'rb') as g:
         people = json.load(g)
     people[self_id]['online'] = 1
-    people[self_id]['time_updated'] = time.time()
+    people[self_id]['time_updated'] = now = time.time()
 
-    for f in friends:
+    for f in people[self_id]['friends']:
         # Mandatory Online/Offline refresh
         if people[f]['online'] and people[f]['time_updated'] - now > timeout:
             people[f]['online'] = 0
@@ -160,7 +163,7 @@ def add_review(self_id, location, review):
     with open('people.json', 'wb') as g:
         json.dump(people, g)
     with open('reviews.json', 'wb') as g:
-        json.dump(reviews, g)
+        json.dump({str(k): v for k, v in reviews.iteritems()}, g)
 
 def sync_location(self_id, location):
     with open('people.json', 'rb') as g:

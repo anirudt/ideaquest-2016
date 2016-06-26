@@ -172,8 +172,8 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             list_contacts = ret['contacts']
 
         # We will need location and contact number (ID) for any action!
-        px = int(form['px'].value)
-        py = int(form['py'].value)
+        px = float(form['px'].value)
+        py = float(form['py'].value)
         location = tuple([px, py])
         self_id = form['self_id'].value
 
