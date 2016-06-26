@@ -82,23 +82,28 @@ def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
         finally:
             mutex_db_1.release()
     elif c == "on":
+        mutex_db_1.acquire()
         mutex_db_2.acquire()
         try:
             # Fetch reviews on areas
             return worker.fetch_reviews_location(self_id, location)
         finally:
             mutex_db_2.release()
+            mutex_db_1.release()
     elif d == "on":
+        mutex_db_1.acquire()
         mutex_db_2.acquire()
         try:
             # Send reviews about places
             worker.add_review(self_id, location, review)
         finally:
             mutex_db_2.release()
+            mutex_db_1.release()
     elif e == "on":
         mutex_db_1.acquire()
         try:
             # For now, we do exactly what we are doing for case 1
+            # TODO: WOrk on an alternative approach
             return worker.fetch_friends_location(self_id, location)
         # Send Save Our Souls Call
         finally:
@@ -161,8 +166,10 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         if form.has_key('sos_call'):
             bool_sos_call      = form['sos_call'].value
 
-        ret = json.loads(form['contact_file'].value)
-        list_contacts = ret['contacts']
+        list_contacts = []
+        if form.has_key('contact_file') and form['contact_file'].value != '':
+            ret = json.loads(form['contact_file'].value)
+            list_contacts = ret['contacts']
 
         # We will need location and contact number (ID) for any action!
         px = int(form['px'].value)
@@ -173,12 +180,12 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # Additional Data
         review = form['review'].value
 
-        #TODO: Do all database level management, and computation wrt client's request
         ret = {}
         ret['result'] = process_args(bool_contacts_send, bool_fetch_friends,\
                 bool_fetch_reviews, bool_give_reviews,\
                 bool_sos_call, self_id, location, review, list_contacts)
 
+        # TODO: Check if null
         g = open('send_client.json', 'wb')
         json.dump(ret, g)
         #TODO: And, give result back to client

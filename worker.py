@@ -72,6 +72,12 @@ def sync_contacts(self_id, list_contacts, location):
     people[self_id]['online'] = 1
     people[self_id]['time_updated'] = now = time.time()
 
+    dummy = {
+        'location': None,\
+        'friends': [self_id],\
+        'online': 0,\
+        'time_updated': 0\
+        }
     # Handle all contacts which have had no prev data
     for contact in list_contacts:
         if people.get(contact) is None:
@@ -79,7 +85,7 @@ def sync_contacts(self_id, list_contacts, location):
 
     # Mandatory Online/Offline refresh
     for f in people[self_id]['friends']:
-        if people[f]['time_updated'] - now > timeout:
+        if people[f]['online'] == 1 and people[f]['time_updated'] - now > timeout:
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
 
@@ -100,11 +106,11 @@ def fetch_friends_location(self_id, location):
 
     for f in friends:
         # Mandatory Online/Offline refresh
-        if people[f]['time_updated'] - now > timeout:
+        if people[f]['online'] == 1 and people[f]['time_updated'] - now > timeout:
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
         if people[f]['online'] and distance(people[f]['location'], center) <= friends_threshold:
-            nearby_friends.append([self_id, people[f]['location']])
+            nearby_friends.append([f, people[f]['location']])
     with open('people.json', 'wb') as g:
         json.dump(people, g)
     return nearby_friends
@@ -125,7 +131,7 @@ def fetch_reviews_location(self_id, location):
     people[self_id]['time_updated'] = time.time()
     for f in friends:
         # Mandatory Online/Offline refresh
-        if people[f]['time_updated'] - now > timeout:
+        if people[f]['online'] and people[f]['time_updated'] - now > timeout:
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
     with open('people.json', 'wb') as g:
@@ -148,7 +154,7 @@ def add_review(self_id, location, review):
 
     for f in friends:
         # Mandatory Online/Offline refresh
-        if people[f]['time_updated'] - now > timeout:
+        if people[f]['online'] and people[f]['time_updated'] - now > timeout:
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
     with open('people.json', 'wb') as g:
@@ -161,11 +167,11 @@ def sync_location(self_id, location):
         people = json.load(g)
     people[self_id]['location'] = location
     people[self_id]['online'] = 1
-    people[self_id]['time_updated'] = time.time()
+    people[self_id]['time_updated'] = now = time.time()
 
     # Mandatory Online/Offline refresh
     for f in people[self_id]['friends']:
-        if people[f]['time_updated'] - now > timeout:
+        if people[f]['online'] and people[f]['time_updated'] - now > timeout:
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
     with open('people.json', 'wb') as g:
