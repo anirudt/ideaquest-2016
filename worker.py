@@ -7,9 +7,10 @@ import json
 """
 Some DEFINES
 """
-review_threshold = 10
+review_threshold  = 10
 friends_threshold = 5
-timeout          = 1000
+timeout           = 1000
+set_alarm         = False
 
 
 """
@@ -58,6 +59,7 @@ def distance(p1, p2):
     return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5
 
 def sync_contacts(self_id, list_contacts, location):
+    global timeout
     with open('people.json', 'rb') as g:
         people = json.load(g)
     dummy = {
@@ -95,6 +97,7 @@ def sync_contacts(self_id, list_contacts, location):
 
 
 def fetch_friends_location(self_id, location):
+    global timeout
     with open('people.json', 'rb') as g:
         people = json.load(g)
     # Set the location
@@ -117,6 +120,7 @@ def fetch_friends_location(self_id, location):
     return nearby_friends
 
 def fetch_reviews_location(self_id, location):
+    global timeout, review_threshold
     with open('reviews.json', 'rb') as g:
         reviews = json.load(g)
     with open('people.json', 'rb') as g:
@@ -143,6 +147,7 @@ def fetch_reviews_location(self_id, location):
     return nearby_reviews
 
 def add_review(self_id, location, review):
+    global timeout, review_threshold
     with open('reviews.json', 'rb') as g:
         reviews = json.load(g)
     reviews[str(location)] = {\
@@ -166,6 +171,7 @@ def add_review(self_id, location, review):
         json.dump({str(k): v for k, v in reviews.iteritems()}, g)
 
 def sync_location(self_id, location):
+    global timeout, set_alarm
     with open('people.json', 'rb') as g:
         people = json.load(g)
     people[self_id]['location'] = location
@@ -179,6 +185,13 @@ def sync_location(self_id, location):
             people[f]['time_updated'] = time.time()
     with open('people.json', 'wb') as g:
         json.dump(people, g)
+    if set_alarm:
+        # TODO: Decide what to do here.
 
+def sos_call(self_id, location):
+    global set_alarm = True
+    # When this happens, reassure the person who wants help
+    help_msg = "We are dispatching help. Please stay calm and be alert."
+    return help_msg
 if __name__ == '__main__':
     main()

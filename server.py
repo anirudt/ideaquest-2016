@@ -59,6 +59,7 @@ Form Input Attributes:
 
 """
 
+#TODO: If DBs are not created, create sample ones.
 
 def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
     """
