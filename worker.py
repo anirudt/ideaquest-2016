@@ -3,6 +3,7 @@ import ast
 from threading import Thread, Lock
 import time
 import json
+import pdb
 
 """
 Some DEFINES
@@ -172,6 +173,7 @@ def add_review(self_id, location, review):
 
 def sync_location(self_id, location):
     global timeout, set_alarm
+    pdb.set_trace()
     with open('people.json', 'rb') as g:
         people = json.load(g)
     people[self_id]['location'] = location
@@ -187,9 +189,10 @@ def sync_location(self_id, location):
         json.dump(people, g)
     if set_alarm:
         # TODO: Decide what to do here.
+        print "Danger."
 
 def sos_call(self_id, location):
-    global set_alarm = True
+    global set_alarm
     # When this happens, reassure the person who wants help
     help_msg = "We are dispatching help. Please stay calm and be alert."
     return help_msg

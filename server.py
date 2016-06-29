@@ -173,13 +173,17 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             list_contacts = ret['contacts']
 
         # We will need location and contact number (ID) for any action!
-        px = float(form['px'].value)
-        py = float(form['py'].value)
+        if form.has_key('px'):
+            px = float(form['px'].value)
+        if form.has_key('py'):
+            py = float(form['py'].value)
         location = tuple([px, py])
-        self_id = form['self_id'].value
+        if form.has_key('self_id'):
+            self_id = form['self_id'].value
 
         # Additional Data
-        review = form['review'].value
+        if form.has_key('review'):
+            review = form['review'].value
 
         ret = {}
         ret['result'] = process_args(bool_contacts_send, bool_fetch_friends,\
@@ -194,9 +198,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
 class SecureThreadedHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
-    """ Handles Multi-Threaded HTTP Server requests """
     def __init__(self, server_address, HandlerClass):
-        """ Utilize IP address, Port no. """
         BaseServer.__init__(self, server_address, HandlerClass)
         ctx = SSL.Context(SSL.SSLv23_METHOD)
         #server.pem's location (containing the server private key and
@@ -228,4 +230,4 @@ def main(timeout_mins):
             break
 
 if __name__ == "__main__":
-    main(10)
+    main(100)
