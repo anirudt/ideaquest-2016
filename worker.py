@@ -95,6 +95,7 @@ def sync_contacts(self_id, list_contacts, location):
 
     with open('people.json', 'wb') as g:
         json.dump(people, g)
+    return list_contacts
 
 
 def fetch_friends_location(self_id, location):

@@ -56,6 +56,7 @@ Form Input Attributes:
 7. py
 8. self_id
 9. review
+10. contact_file
 
 """
 
@@ -71,7 +72,7 @@ def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
     if a == "on":
         mutex_db_1.acquire() 
         try:
-            worker.sync_contacts(self_id, list_contacts, location)
+            return worker.sync_contacts(self_id, list_contacts, location)
             # Sync contacts
         finally:
             mutex_db_1.release()
@@ -168,9 +169,10 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             bool_sos_call      = form['sos_call'].value
 
         list_contacts = []
+        review = ""
         if form.has_key('contact_file') and form['contact_file'].value != '':
             ret = json.loads(form['contact_file'].value)
-            list_contacts = ret['contacts']
+            list_contacts = ret
 
         # We will need location and contact number (ID) for any action!
         if form.has_key('px'):
