@@ -12,6 +12,8 @@ review_threshold  = 10
 friends_threshold = 5
 timeout           = 1000
 set_alarm         = False
+alarm_self_id     = ""
+alarm_location    = (0.0, 0.0)
 
 
 """
@@ -95,7 +97,7 @@ def sync_contacts(self_id, list_contacts, location):
 
     with open('people.json', 'wb') as g:
         json.dump(people, g)
-    return list_contacts
+    return list_contacts, False
 
 
 def fetch_friends_location(self_id, location):
@@ -119,7 +121,7 @@ def fetch_friends_location(self_id, location):
             nearby_friends.append([f, people[f]['location']])
     with open('people.json', 'wb') as g:
         json.dump(people, g)
-    return nearby_friends
+    return nearby_friends, False
 
 def fetch_reviews_location(self_id, location):
     global timeout, review_threshold
@@ -146,7 +148,7 @@ def fetch_reviews_location(self_id, location):
         json.dump(people, g)
     with open('reviews.json', 'wb') as g:
         json.dump({str(k): v for k, v in reviews.iteritems()}, g)
-    return nearby_reviews
+    return nearby_reviews, False
 
 def add_review(self_id, location, review):
     global timeout, review_threshold
@@ -171,6 +173,8 @@ def add_review(self_id, location, review):
         json.dump(people, g)
     with open('reviews.json', 'wb') as g:
         json.dump({str(k): v for k, v in reviews.iteritems()}, g)
+    return [], False
+
 
 def sync_location(self_id, location):
     global timeout, set_alarm
@@ -190,12 +194,25 @@ def sync_location(self_id, location):
         json.dump(people, g)
     if set_alarm:
         # TODO: Decide what to do here.
-        print "Danger."
+        print "Danger, Help the person!"
+        response = []
+        response.append(alarm_self_id)
+        response.append(alarm_location)
+        # In the absence of any alarm, send an "ok" response
+        return response, True
+    else:
+        return ["ok"], False
 
 def sos_call(self_id, location):
     global set_alarm
     # When this happens, reassure the person who wants help
     help_msg = "We are dispatching help. Please stay calm and be alert."
+    set_alarm = True
+    alarm_location = location
+    alarm_self_id = self_id
     return help_msg
+
+
+
 if __name__ == '__main__':
     main()

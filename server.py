@@ -188,11 +188,17 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             review = form['review'].value
 
         ret = {}
-        ret['result'] = process_args(bool_contacts_send, bool_fetch_friends,\
+        a, b = process_args(bool_contacts_send, bool_fetch_friends,\
                 bool_fetch_reviews, bool_give_reviews,\
                 bool_sos_call, self_id, location, review, list_contacts)
 
         # TODO: Check if null
+        ret['result'] = a
+        if b:
+            ret['sos'] = 1
+        else:
+            ret['sos'] = 0
+        # Scan for the above key on the app side for helping an SOS Victim
         g = open('send_client.json', 'wb')
         json.dump(ret, g)
         #TODO: And, give result back to client
