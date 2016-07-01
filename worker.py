@@ -118,9 +118,11 @@ def fetch_friends_location(self_id, location):
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
         if people[f]['online'] and distance(people[f]['location'], center) <= friends_threshold:
-            nearby_friends.append([f, people[f]['location']])
+            nearby_friends.append([f, people[f]['location'], distance(people[f]['location'], center)])
     with open('people.json', 'wb') as g:
         json.dump(people, g)
+    sorted(nearby_friends, key = lambda x: x[2])
+    print nearby_friends
     return nearby_friends, False
 
 def fetch_reviews_location(self_id, location):
@@ -134,7 +136,8 @@ def fetch_reviews_location(self_id, location):
         locn = ast.literal_eval(str_locn)
         if distance(locn, location) < review_threshold:
             for idx in reviews[str_locn]:
-                nearby_reviews.append([idx, reviews[str_locn][idx][0], reviews[str_locn][idx][1]])
+                nearby_reviews.append([idx, reviews[str_locn][idx][0], reviews[str_locn][idx][1],
+                                      distance(locn, location)])
 
     # Need to update online status!
     people[self_id]['online'] = 1
@@ -148,6 +151,7 @@ def fetch_reviews_location(self_id, location):
         json.dump(people, g)
     with open('reviews.json', 'wb') as g:
         json.dump({str(k): v for k, v in reviews.iteritems()}, g)
+    sorted(nearby_reviews, key = lambda x: x[3])
     return nearby_reviews, False
 
 def add_review(self_id, location, review):
@@ -178,7 +182,6 @@ def add_review(self_id, location, review):
 
 def sync_location(self_id, location):
     global timeout, set_alarm
-    pdb.set_trace()
     with open('people.json', 'rb') as g:
         people = json.load(g)
     people[self_id]['location'] = location
@@ -192,8 +195,8 @@ def sync_location(self_id, location):
             people[f]['time_updated'] = time.time()
     with open('people.json', 'wb') as g:
         json.dump(people, g)
-    if set_alarm:
-        # TODO: Decide what to do here.
+    if set_alarm and self_id != alarm_self_id:
+        # Check if alarm is set and this is another person
         print "Danger, Help the person!"
         response = []
         response.append(alarm_self_id)
@@ -210,7 +213,7 @@ def sos_call(self_id, location):
     set_alarm = True
     alarm_location = location
     alarm_self_id = self_id
-    return help_msg
+    return [help_msg], 0
 
 
 

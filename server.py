@@ -72,7 +72,7 @@ def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
     if a == "on":
         mutex_db_1.acquire() 
         try:
-            return worker.sync_contacts(self_id, list_contacts, location)
+            ret = worker.sync_contacts(self_id, list_contacts, location)
             # Sync contacts
         finally:
             mutex_db_1.release()
@@ -80,7 +80,7 @@ def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
         mutex_db_1.acquire()
         try:
             # Fetch location data on contacts
-            return worker.fetch_friends_location(self_id, location)
+            ret = worker.fetch_friends_location(self_id, location)
         finally:
             mutex_db_1.release()
     elif c == "on":
@@ -88,7 +88,7 @@ def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
         mutex_db_2.acquire()
         try:
             # Fetch reviews on areas
-            return worker.fetch_reviews_location(self_id, location)
+            ret = worker.fetch_reviews_location(self_id, location)
         finally:
             mutex_db_2.release()
             mutex_db_1.release()
@@ -97,7 +97,7 @@ def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
         mutex_db_2.acquire()
         try:
             # Send reviews about places
-            worker.add_review(self_id, location, review)
+            ret = worker.add_review(self_id, location, review)
         finally:
             mutex_db_2.release()
             mutex_db_1.release()
@@ -106,7 +106,7 @@ def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
         try:
             # For now, we do exactly what we are doing for case 1
             # TODO: WOrk on an alternative approach
-            return worker.fetch_friends_location(self_id, location)
+            ret = worker.fetch_friends_location(self_id, location)
         # Send Save Our Souls Call
         finally:
             mutex_db_1.release()
@@ -115,9 +115,10 @@ def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
         try:
             # Default: Just sync up location of the user and
             #          set status to online
-            worker.sync_location(self_id, location)
+            ret = worker.sync_location(self_id, location)
         finally:
             mutex_db_1.release()
+    return ret
 
 
 class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -180,6 +181,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         if form.has_key('py'):
             py = float(form['py'].value)
         location = tuple([px, py])
+        self_id = ""
         if form.has_key('self_id'):
             self_id = form['self_id'].value
 
@@ -188,9 +190,10 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             review = form['review'].value
 
         ret = {}
-        a, b = process_args(bool_contacts_send, bool_fetch_friends,\
+        print bool_contacts_send, bool_fetch_friends,\
                 bool_fetch_reviews, bool_give_reviews,\
-                bool_sos_call, self_id, location, review, list_contacts)
+                bool_sos_call, self_id, location, review, list_contacts
+        a, b = process_args(bool_contacts_send, bool_fetch_friends, bool_fetch_reviews, bool_give_reviews, bool_sos_call, self_id, location, review, list_contacts)
 
         # TODO: Check if null
         ret['result'] = a
