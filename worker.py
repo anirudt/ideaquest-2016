@@ -24,7 +24,7 @@ alarm_radius_large      = 20
 selected_alarm_radius   = 0
 selected_alarm_contacts = []
 allowable_helpers       = 0
-max_allowable_helpers   = 5
+max_allowable_helpers   = 1
 
 
 """
@@ -73,7 +73,7 @@ def distance(p1, p2):
     return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5
 
 def sync_contacts(self_id, list_contacts, location):
-    global timeout
+    global timeout, all_contacts
     with open('people.json', 'rb') as g:
         people = json.load(g)
     dummy = {
@@ -140,6 +140,35 @@ def fetch_friends_location(self_id, location):
     print nearby_friends
     return nearby_friends, False
 
+"""
+
+Returns an object of the following structure:
+
+{
+    'sos' : 0,
+    'result' :
+
+    {
+        "0" : {
+                'lon' : 0,
+                'lat' : 1,
+                'info': [
+                        {
+                        'self_id' : "0000000000",
+                        'review'  : "This is a nice place",
+                        'time'    : 1000000
+                        }
+                        {
+                        'self_id' : "1111111111",
+                        'review'  : "This is a nice place",
+                        'time'    : 1000000
+                        }
+                        ...
+                ]
+        }
+    }
+}
+"""
 def fetch_reviews_location(self_id, location):
     global timeout, review_threshold
     with open('reviews.json', 'rb') as g:
@@ -148,17 +177,24 @@ def fetch_reviews_location(self_id, location):
         people = json.load(g)
     nearby_reviews = {}
     tmp = []
+    i = 0
     for str_locn in reviews.keys():
-        tmp = []
+        tmp = {}
+        tmp['info'] = []
         locn = ast.literal_eval(str_locn)
-        nearby_reviews[str(list(locn))] = []
         if distance(locn, location) < review_threshold:
             for idx in reviews[str_locn]:
+                info = {}
                 print str(list(locn))
-                tmp.append([idx, reviews[str_locn][idx][0], reviews[str_locn][idx][1],
-                                      distance(locn, location)])
-        if len(tmp) > 0:
-            nearby_reviews[str(list(locn))] = tmp
+                info['self_id'] = idx
+                info['review']  = reviews[str_locn][idx][0]
+                info['time']    = reviews[str_locn][idx][1]
+                tmp['info'].append(info)
+            tmp['lat'] = locn[0]
+            tmp['lon'] = locn[1]
+        if len(tmp['info']) > 0:
+            nearby_reviews[i] = tmp
+        i += 1
     # Need to update online status!
     people[self_id]['online'] = 1
     people[self_id]['time_updated'] = now = time.time()
@@ -216,7 +252,7 @@ def sync_location(self_id, location):
             people[f]['time_updated'] = time.time()
     with open('people.json', 'wb') as g:
         json.dump(people, g)
-    response = []
+    response = {}
     print "alarm = ", alarm_self_id
     if (set_alarm_low or set_alarm_med or set_alarm_high) and self_id != alarm_self_id:
         # Check if alarm is set and this is another person
@@ -227,8 +263,9 @@ def sync_location(self_id, location):
             if distance(alarm_location, location) <= selected_alarm_radius:
                 # This person could be our helper.
                 print "Danger, Help the person!"
-                response.append(alarm_self_id)
-                response.append(list(alarm_location))
+                response['self_id'] = alarm_self_id
+                response['lat']     = alarm_location[0]
+                response['lon']     = alarm_location[1]
 
                 # In the absence of any alarm, send an "ok" response
                 return response, True
@@ -238,7 +275,7 @@ def sync_location(self_id, location):
 
 def sos_call(self_id, location, low, med, high):
     global set_alarm_low, set_alarm_med, set_alarm_high, alarm_radius_small, selected_alarm_radius, \
-            alarm_radius_large, selected_alarm_contacts, alarm_location, alarm_self_id
+            alarm_radius_large, selected_alarm_contacts, alarm_location, alarm_self_id, all_contacts
     # When this happens, reassure the person who wants help
     with open('people.json', 'rb') as g:
         people = json.load(g)
@@ -265,7 +302,7 @@ def handle_user_help_response(self_id, location, on_or_off):
     global allowable_helpers, max_allowable_helpers, set_alarm_med, set_alarm_low, set_alarm_high
     msg = "Another user has already been selected. Thank you for your intent."
     if on_or_off == "on":
-        if allowable_helpers < max_allowable_helpers:
+        if allowable_helpers < max_allowable_helpers and (set_alarm_low or set_alarm_med or set_alarm_high):
             # User has acknowledged to help and the alarm status is still active
             allowable_helpers += 1
             # Now, set the alarm off, this we are doing currently as we need only a single person to help

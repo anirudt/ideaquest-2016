@@ -115,7 +115,6 @@ def process_args(bool_args, self_id, location, review, list_contacts):
         mutex_db_1.acquire()
         try:
             # Handle when the user acks or nacks to help
-            pdb.set_trace()
             ret = worker.handle_user_help_response(self_id, location, bool_args[7])
         finally:
             mutex_db_1.release()
