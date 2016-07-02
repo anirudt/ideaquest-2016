@@ -14,14 +14,17 @@ timeout           = 1000
 all_contacts      = []
 
 """ Alarm DEFINES """
-set_alarm_low         = False
-set_alarm_med         = False
-set_alarm_high        = False
-alarm_self_id         = ""
-alarm_location        = (0.0, 0.0)
-alarm_radius_small    = 10
-alarm_radius_large    = 20
-selected_alarm_radius = 0
+set_alarm_low           = False
+set_alarm_med           = False
+set_alarm_high          = False
+alarm_self_id           = ""
+alarm_location          = (0.0, 0.0)
+alarm_radius_small      = 10
+alarm_radius_large      = 20
+selected_alarm_radius   = 0
+selected_alarm_contacts = []
+allowable_helpers       = 0
+max_allowable_helpers   = 5
 
 
 """
@@ -199,7 +202,7 @@ def add_review(self_id, location, review):
 
 
 def sync_location(self_id, location):
-    global timeout, set_alarm
+    global timeout, set_alarm, alarm_location, selected_alarm_radius, selected_alarm_contacts, alarm_self_id
     with open('people.json', 'rb') as g:
         people = json.load(g)
     people[self_id]['location'] = location
@@ -213,39 +216,70 @@ def sync_location(self_id, location):
             people[f]['time_updated'] = time.time()
     with open('people.json', 'wb') as g:
         json.dump(people, g)
+    response = []
+    print "alarm = ", alarm_self_id
     if (set_alarm_low or set_alarm_med or set_alarm_high) and self_id != alarm_self_id:
         # Check if alarm is set and this is another person
-        print "Danger, Help the person!"
-        # TODO: Use the selected_alarm_radius and the state of contacts to
-        # decide if this person falls in the acceptable list / circle.
-        response = []
-        response.append(alarm_self_id)
-        response.append(alarm_location)
-        # In the absence of any alarm, send an "ok" response
-        return response, True
-    else:
-        return ["ok"], False
+
+        # Check if the person is in the allowable list of contacts and is within the 
+        # acceptable circle.
+        if self_id in selected_alarm_contacts:
+            if distance(alarm_location, location) <= selected_alarm_radius:
+                # This person could be our helper.
+                print "Danger, Help the person!"
+                response.append(alarm_self_id)
+                response.append(list(alarm_location))
+
+                # In the absence of any alarm, send an "ok" response
+                return response, True
+
+    return ["ok"], False
+
 
 def sos_call(self_id, location, low, med, high):
-    global set_alarm_low, set_alarm_med, set_alarm_high, alarm_radius_small, selected_alarm_radius,
-            alarm_radius_large, selected_alarm_contacts
+    global set_alarm_low, set_alarm_med, set_alarm_high, alarm_radius_small, selected_alarm_radius, \
+            alarm_radius_large, selected_alarm_contacts, alarm_location, alarm_self_id
     # When this happens, reassure the person who wants help
+    with open('people.json', 'rb') as g:
+        people = json.load(g)
     help_msg = "We are dispatching help. Please stay calm and be alert."
     if low == "on":
         set_alarm_low = True
         selected_alarm_radius = alarm_radius_small
+        selected_alarm_contacts = people[self_id]['friends']
     elif low == "on":
         set_alarm_med = True
         selected_alarm_radius = alarm_radius_small
+        selected_alarm_contacts = people[self_id]['friends']
     elif low == "on":
         set_alarm_high = True
         selected_alarm_radius = alarm_radius_large
+        selected_alarm_contacts = all_contacts
 
     alarm_location = location
     alarm_self_id = self_id
+    print alarm_self_id
     return [help_msg], False
 
+def handle_user_help_response(self_id, location, on_or_off):
+    global allowable_helpers, max_allowable_helpers, set_alarm_med, set_alarm_low, set_alarm_high
+    msg = "Another user has already been selected. Thank you for your intent."
+    if on_or_off == "on":
+        if allowable_helpers < max_allowable_helpers:
+            # User has acknowledged to help and the alarm status is still active
+            allowable_helpers += 1
+            # Now, set the alarm off, this we are doing currently as we need only a single person to help
+            if allowable_helpers == max_allowable_helpers:
+                set_alarm_high = set_alarm_med = set_alarm_low = False
 
+            msg = "You have been selected for this mission. Please proceed."
+
+
+    if on_or_off == "off":
+        # User has declined to help
+        msg = "Thank you for your reply."
+
+    return msg, False
 
 if __name__ == '__main__':
     main()

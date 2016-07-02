@@ -64,28 +64,27 @@ Form Input Attributes:
 
 #TODO: If DBs are not created, create sample ones.
 
-def process_args(a, b, c, d, e, f, g, h, self_id, location, review, list_contacts):
+def process_args(bool_args, self_id, location, review, list_contacts):
     """
     Decisive function to process App side arguments
     and employ server side functionality to make
     things work.
     """
-    print a, b, c, d, e
-    if a == "on":
+    if bool_args[0] == "on":
         mutex_db_1.acquire() 
         try:
             ret = worker.sync_contacts(self_id, list_contacts, location)
             # Sync contacts
         finally:
             mutex_db_1.release()
-    elif b == "on":
+    elif bool_args[1] == "on":
         mutex_db_1.acquire()
         try:
             # Fetch location data on contacts
             ret = worker.fetch_friends_location(self_id, location)
         finally:
             mutex_db_1.release()
-    elif c == "on":
+    elif bool_args[2] == "on":
         mutex_db_1.acquire()
         mutex_db_2.acquire()
         try:
@@ -94,7 +93,7 @@ def process_args(a, b, c, d, e, f, g, h, self_id, location, review, list_contact
         finally:
             mutex_db_2.release()
             mutex_db_1.release()
-    elif d == "on":
+    elif bool_args[3] == "on":
         mutex_db_1.acquire()
         mutex_db_2.acquire()
         try:
@@ -103,20 +102,21 @@ def process_args(a, b, c, d, e, f, g, h, self_id, location, review, list_contact
         finally:
             mutex_db_2.release()
             mutex_db_1.release()
-    elif e == "on" or f == "on" or g == "on":
+    elif bool_args[4] == "on" or bool_args[5] == "on" or bool_args[6] == "on":
         mutex_db_1.acquire()
         try:
             # For now, we do exactly what we are doing for case 1
             # TODO: WOrk on an alternative approach
-            ret = worker.fetch_friends_location(self_id, location, e, f, g)
+            ret = worker.sos_call(self_id, location, bool_args[4], bool_args[5], bool_args[6])
         # Send Save Our Souls Call
         finally:
             mutex_db_1.release()
-    elif h == "on" or h == "off":
+    elif bool_args[7] == "on" or bool_args[7] == "off":
         mutex_db_1.acquire()
         try:
             # Handle when the user acks or nacks to help
-            ret = worker.handle_user_help_response(self_id, location, h)
+            pdb.set_trace()
+            ret = worker.handle_user_help_response(self_id, location, bool_args[7])
         finally:
             mutex_db_1.release()
 
@@ -209,8 +209,9 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             review = form['review'].value
 
         ret = {}
-        a, b = process_args(bool_contacts_send, bool_fetch_friends, bool_fetch_reviews, bool_give_reviews, bool_sos_call_low, bool_sos_call_med, bool_sos_call_high,
-               bool_ack_help, self_id, location, review, list_contacts)
+        print bool_contacts_send, bool_fetch_friends, bool_fetch_reviews, bool_give_reviews, bool_sos_call_low, bool_sos_call_med, bool_sos_call_high, \
+        bool_ack_help, self_id, location, review, list_contacts
+        a, b = process_args([bool_contacts_send, bool_fetch_friends, bool_fetch_reviews, bool_give_reviews, bool_sos_call_low, bool_sos_call_med, bool_sos_call_high, bool_ack_help], self_id, location, review, list_contacts)
 
         # TODO: Check if null
         ret['result'] = a
