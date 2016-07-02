@@ -202,8 +202,6 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         else:
             ret['sos'] = 0
         # Scan for the above key on the app side for helping an SOS Victim
-        g = open('send_client.json', 'wb')
-        json.dump(ret, g)
         #TODO: And, give result back to client
         self.wfile.write(json.dumps(ret))
 

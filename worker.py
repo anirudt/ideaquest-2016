@@ -134,17 +134,16 @@ def fetch_reviews_location(self_id, location):
     nearby_reviews = {}
     tmp = []
     for str_locn in reviews.keys():
-        nearby_reviews[str_locn] = []
         tmp = []
         locn = ast.literal_eval(str_locn)
+        nearby_reviews[str(list(locn))] = []
         if distance(locn, location) < review_threshold:
             for idx in reviews[str_locn]:
-                print str_locn, idx
-                print reviews[str_locn][idx]
+                print str(list(locn))
                 tmp.append([idx, reviews[str_locn][idx][0], reviews[str_locn][idx][1],
                                       distance(locn, location)])
         if len(tmp) > 0:
-            nearby_reviews[str_locn] = tmp
+            nearby_reviews[str(list(locn))] = tmp
     # Need to update online status!
     people[self_id]['online'] = 1
     people[self_id]['time_updated'] = now = time.time()
@@ -153,6 +152,7 @@ def fetch_reviews_location(self_id, location):
         if people[f]['online'] and people[f]['time_updated'] - now > timeout:
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
+    print nearby_reviews
     with open('people.json', 'wb') as g:
         json.dump(people, g)
     with open('reviews.json', 'wb') as g:
