@@ -64,7 +64,7 @@ Form Input Attributes:
 
 #TODO: If DBs are not created, create sample ones.
 
-def process_args(a, b, c, d, e, f, g, self_id, location, review, list_contacts):
+def process_args(a, b, c, d, e, f, g, h, self_id, location, review, list_contacts):
     """
     Decisive function to process App side arguments
     and employ server side functionality to make
@@ -108,10 +108,18 @@ def process_args(a, b, c, d, e, f, g, self_id, location, review, list_contacts):
         try:
             # For now, we do exactly what we are doing for case 1
             # TODO: WOrk on an alternative approach
-            ret = worker.fetch_friends_location(self_id, location)
+            ret = worker.fetch_friends_location(self_id, location, e, f, g)
         # Send Save Our Souls Call
         finally:
             mutex_db_1.release()
+    elif h == "on" or h == "off":
+        mutex_db_1.acquire()
+        try:
+            # Handle when the user acks or nacks to help
+            ret = worker.handle_user_help_response(self_id, location, h)
+        finally:
+            mutex_db_1.release()
+
     else:
         mutex_db_1.acquire()
         try:
@@ -161,6 +169,8 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         bool_contacts_send = bool_fetch_friends = bool_fetch_reviews =\
                 bool_give_reviews = ""
         bool_sos_call_low = bool_sos_call_med = bool_sos_call_high = ""
+        bool_ack_help = ""
+
         if form.has_key('contacts_send'):
             bool_contacts_send = form['contacts_send'].value
         if form.has_key('fetch_friends'):
@@ -175,6 +185,8 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             bool_sos_call_med  = form['sos_call_med'].value
         if form.has_key('sos_call_high'):
             bool_sos_call_high = form['sos_call_high'].value
+        if form.has_key('ack_help'):
+            bool_ack_help      = form['ack_help'].value
 
         list_contacts = []
         review = ""
@@ -197,7 +209,8 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             review = form['review'].value
 
         ret = {}
-        a, b = process_args(bool_contacts_send, bool_fetch_friends, bool_fetch_reviews, bool_give_reviews, bool_sos_call_low, bool_sos_call_med, bool_sos_call_high, self_id, location, review, list_contacts)
+        a, b = process_args(bool_contacts_send, bool_fetch_friends, bool_fetch_reviews, bool_give_reviews, bool_sos_call_low, bool_sos_call_med, bool_sos_call_high,
+               bool_ack_help, self_id, location, review, list_contacts)
 
         # TODO: Check if null
         ret['result'] = a

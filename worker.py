@@ -11,11 +11,17 @@ Some DEFINES
 review_threshold  = 10
 friends_threshold = 5
 timeout           = 1000
-set_alarm_low     = False
-set_alarm_med     = False
-set_alarm_high    = False
-alarm_self_id     = ""
-alarm_location    = (0.0, 0.0)
+all_contacts      = []
+
+""" Alarm DEFINES """
+set_alarm_low         = False
+set_alarm_med         = False
+set_alarm_high        = False
+alarm_self_id         = ""
+alarm_location        = (0.0, 0.0)
+alarm_radius_small    = 10
+alarm_radius_large    = 20
+selected_alarm_radius = 0
 
 
 """
@@ -97,6 +103,10 @@ def sync_contacts(self_id, list_contacts, location):
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
 
+    # Updating the global contacts list at the server end
+    # and maintain non-duplication
+    all_contacts = all_contacts + list_contacts
+    all_contacts = list(set(all_contacts))
     with open('people.json', 'wb') as g:
         json.dump(people, g)
     return list_contacts, False
@@ -203,9 +213,11 @@ def sync_location(self_id, location):
             people[f]['time_updated'] = time.time()
     with open('people.json', 'wb') as g:
         json.dump(people, g)
-    if set_alarm_low and self_id != alarm_self_id:
+    if (set_alarm_low or set_alarm_med or set_alarm_high) and self_id != alarm_self_id:
         # Check if alarm is set and this is another person
         print "Danger, Help the person!"
+        # TODO: Use the selected_alarm_radius and the state of contacts to
+        # decide if this person falls in the acceptable list / circle.
         response = []
         response.append(alarm_self_id)
         response.append(alarm_location)
@@ -214,11 +226,21 @@ def sync_location(self_id, location):
     else:
         return ["ok"], False
 
-def sos_call(self_id, location):
-    global set_alarm
+def sos_call(self_id, location, low, med, high):
+    global set_alarm_low, set_alarm_med, set_alarm_high, alarm_radius_small, selected_alarm_radius,
+            alarm_radius_large, selected_alarm_contacts
     # When this happens, reassure the person who wants help
     help_msg = "We are dispatching help. Please stay calm and be alert."
-    set_alarm_low = True
+    if low == "on":
+        set_alarm_low = True
+        selected_alarm_radius = alarm_radius_small
+    elif low == "on":
+        set_alarm_med = True
+        selected_alarm_radius = alarm_radius_small
+    elif low == "on":
+        set_alarm_high = True
+        selected_alarm_radius = alarm_radius_large
+
     alarm_location = location
     alarm_self_id = self_id
     return [help_msg], False
