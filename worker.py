@@ -50,7 +50,7 @@ FORMAT of the "Reviews" Database
 The reviews database has the self location and list of reviews, hashable by location.
 
 reviews = {}
-review[(0, 0)] = {
+review["(0, 0)"] = {
         '0000000000' : ["This is a good place", 100],
         '1111111111' : ["This is a great place", 200]
 }
@@ -131,14 +131,20 @@ def fetch_reviews_location(self_id, location):
         reviews = json.load(g)
     with open('people.json', 'rb') as g:
         people = json.load(g)
-    nearby_reviews = []
+    nearby_reviews = {}
+    tmp = []
     for str_locn in reviews.keys():
+        nearby_reviews[str_locn] = []
+        tmp = []
         locn = ast.literal_eval(str_locn)
         if distance(locn, location) < review_threshold:
             for idx in reviews[str_locn]:
-                nearby_reviews.append([idx, reviews[str_locn][idx][0], reviews[str_locn][idx][1],
+                print str_locn, idx
+                print reviews[str_locn][idx]
+                tmp.append([idx, reviews[str_locn][idx][0], reviews[str_locn][idx][1],
                                       distance(locn, location)])
-
+        if len(tmp) > 0:
+            nearby_reviews[str_locn] = tmp
     # Need to update online status!
     people[self_id]['online'] = 1
     people[self_id]['time_updated'] = now = time.time()
@@ -151,7 +157,7 @@ def fetch_reviews_location(self_id, location):
         json.dump(people, g)
     with open('reviews.json', 'wb') as g:
         json.dump({str(k): v for k, v in reviews.iteritems()}, g)
-    sorted(nearby_reviews, key = lambda x: x[3])
+
     return nearby_reviews, False
 
 def add_review(self_id, location, review):
@@ -213,7 +219,7 @@ def sos_call(self_id, location):
     set_alarm = True
     alarm_location = location
     alarm_self_id = self_id
-    return [help_msg], 0
+    return [help_msg], False
 
 
 
