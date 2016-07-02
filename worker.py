@@ -11,7 +11,9 @@ Some DEFINES
 review_threshold  = 10
 friends_threshold = 5
 timeout           = 1000
-set_alarm         = False
+set_alarm_low     = False
+set_alarm_med     = False
+set_alarm_high    = False
 alarm_self_id     = ""
 alarm_location    = (0.0, 0.0)
 
@@ -201,7 +203,7 @@ def sync_location(self_id, location):
             people[f]['time_updated'] = time.time()
     with open('people.json', 'wb') as g:
         json.dump(people, g)
-    if set_alarm and self_id != alarm_self_id:
+    if set_alarm_low and self_id != alarm_self_id:
         # Check if alarm is set and this is another person
         print "Danger, Help the person!"
         response = []
@@ -216,7 +218,7 @@ def sos_call(self_id, location):
     global set_alarm
     # When this happens, reassure the person who wants help
     help_msg = "We are dispatching help. Please stay calm and be alert."
-    set_alarm = True
+    set_alarm_low = True
     alarm_location = location
     alarm_self_id = self_id
     return [help_msg], False

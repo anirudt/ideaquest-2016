@@ -51,18 +51,20 @@ Form Input Attributes:
 2. fetch_friends
 3. fetch_reviews
 4. give_reviews
-5. sos_call
-6. px
-7. py
-8. self_id
-9. review
-10. contact_file
+5. sos_call_low
+6. sos_call_med
+7. sos_call_high
+8. px
+9. py
+10. self_id
+11. review
+12. contact_file
 
 """
 
 #TODO: If DBs are not created, create sample ones.
 
-def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
+def process_args(a, b, c, d, e, f, g, self_id, location, review, list_contacts):
     """
     Decisive function to process App side arguments
     and employ server side functionality to make
@@ -101,7 +103,7 @@ def process_args(a, b, c, d, e, self_id, location, review, list_contacts):
         finally:
             mutex_db_2.release()
             mutex_db_1.release()
-    elif e == "on":
+    elif e == "on" or f == "on" or g == "on":
         mutex_db_1.acquire()
         try:
             # For now, we do exactly what we are doing for case 1
@@ -157,7 +159,8 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # List of all Boolean variables, 1 if True | 0 if False
         print form
         bool_contacts_send = bool_fetch_friends = bool_fetch_reviews =\
-                bool_give_reviews = bool_sos_call = ""
+                bool_give_reviews = ""
+        bool_sos_call_low = bool_sos_call_med = bool_sos_call_high = ""
         if form.has_key('contacts_send'):
             bool_contacts_send = form['contacts_send'].value
         if form.has_key('fetch_friends'):
@@ -166,8 +169,12 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             bool_fetch_reviews = form['fetch_reviews'].value
         if form.has_key('give_reviews'):
             bool_give_reviews  = form['give_reviews'].value
-        if form.has_key('sos_call'):
-            bool_sos_call      = form['sos_call'].value
+        if form.has_key('sos_call_low'):
+            bool_sos_call_low  = form['sos_call_low'].value
+        if form.has_key('sos_call_med'):
+            bool_sos_call_med  = form['sos_call_med'].value
+        if form.has_key('sos_call_high'):
+            bool_sos_call_high = form['sos_call_high'].value
 
         list_contacts = []
         review = ""
@@ -190,10 +197,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             review = form['review'].value
 
         ret = {}
-        print bool_contacts_send, bool_fetch_friends,\
-                bool_fetch_reviews, bool_give_reviews,\
-                bool_sos_call, self_id, location, review, list_contacts
-        a, b = process_args(bool_contacts_send, bool_fetch_friends, bool_fetch_reviews, bool_give_reviews, bool_sos_call, self_id, location, review, list_contacts)
+        a, b = process_args(bool_contacts_send, bool_fetch_friends, bool_fetch_reviews, bool_give_reviews, bool_sos_call_low, bool_sos_call_med, bool_sos_call_high, self_id, location, review, list_contacts)
 
         # TODO: Check if null
         ret['result'] = a
