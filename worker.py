@@ -247,10 +247,8 @@ def sync_location(self_id, location):
     global timeout, set_alarm, alarm_location, selected_alarm_radius, selected_alarm_contacts, alarm_self_id
     with open('people.json', 'rb') as g:
         people = json.load(g)
-    if location is not None:
-        people[self_id]['location'] = location
-    else:
-        print "Notification Change"
+    people[self_id]['location'] = location
+
     people[self_id]['online'] = 1
     people[self_id]['time_updated'] = now = time.time()
 
@@ -259,6 +257,24 @@ def sync_location(self_id, location):
         if people[f]['online'] and people[f]['time_updated'] - now > timeout:
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
+    with open('people.json', 'wb') as g:
+        json.dump(people, g)
+    return ["ok"], False
+
+def handle_notifs(self_id):
+    global timeout, set_alarm, alarm_location, selected_alarm_radius, selected_alarm_contacts, alarm_self_id
+    with open('people.json', 'rb') as g:
+        people = json.load(g)
+    print "Notification Change"
+    people[self_id]['online'] = 1
+    people[self_id]['time_updated'] = now = time.time()
+
+    # Mandatory Online/Offline refresh
+    for f in people[self_id]['friends']:
+        if people[f]['online'] and people[f]['time_updated'] - now > timeout:
+            people[f]['online'] = 0
+            people[f]['time_updated'] = time.time()
+    location = people[self_id]['location']
     with open('people.json', 'wb') as g:
         json.dump(people, g)
     response = {}
@@ -278,9 +294,7 @@ def sync_location(self_id, location):
 
                 # In the absence of any alarm, send an "ok" response
                 return response, True
-
     return ["ok"], False
-
 
 def sos_call(self_id, location, low, med, high):
     global set_alarm_low, set_alarm_med, set_alarm_high, alarm_radius_small, selected_alarm_radius, \

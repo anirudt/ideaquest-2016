@@ -119,12 +119,19 @@ def process_args(bool_args, self_id, location, review, list_contacts):
         finally:
             mutex_db_1.release()
 
-    else:
+    elif location is not None:
         mutex_db_1.acquire()
         try:
             # Default: Just sync up location of the user and
             #          set status to online
             ret = worker.sync_location(self_id, location)
+        finally:
+            mutex_db_1.release()
+
+    else:
+        mutex_db_1.acquire()
+        try:
+            ret = worker.handle_notifs(self_id)
         finally:
             mutex_db_1.release()
     return ret
