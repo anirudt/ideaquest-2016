@@ -4,6 +4,7 @@ from threading import Thread, Lock
 import time
 import json
 import pdb
+import operator
 
 """
 Some DEFINES
@@ -133,10 +134,15 @@ def fetch_friends_location(self_id, location):
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
         if people[f]['online'] and distance(people[f]['location'], center) <= friends_threshold:
-            nearby_friends.append([f, people[f]['location'], distance(people[f]['location'], center)])
+            tmp = {}
+            tmp['friend'] = f
+            tmp['lat'] = people[f]['location'][0]
+            tmp['lon'] = people[f]['location'][1]
+            tmp['distance'] = distance(people[f]['location'], center)
+            nearby_friends.append(tmp)
     with open('people.json', 'wb') as g:
         json.dump(people, g)
-    sorted(nearby_friends, key = lambda x: x[2])
+    nearby_friends.sort(key = operator.itemgetter("distance"))
     print nearby_friends
     return nearby_friends, False
 
