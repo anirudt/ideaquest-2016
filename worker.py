@@ -247,7 +247,10 @@ def sync_location(self_id, location):
     global timeout, set_alarm, alarm_location, selected_alarm_radius, selected_alarm_contacts, alarm_self_id
     with open('people.json', 'rb') as g:
         people = json.load(g)
-    people[self_id]['location'] = location
+    if location is not None:
+        people[self_id]['location'] = location
+    else:
+        print "Notification Change"
     people[self_id]['online'] = 1
     people[self_id]['time_updated'] = now = time.time()
 
