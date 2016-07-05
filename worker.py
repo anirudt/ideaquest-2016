@@ -5,6 +5,7 @@ import time
 import json
 import pdb
 import operator
+import math
 
 """
 Some DEFINES
@@ -70,8 +71,19 @@ The members of the list are the review and the timestamp respectively.
 """
 
 # HELPER FUNCTION
+def toRad(deg):
+    return deg * math.pi / 180.0;
+
 def distance(p1, p2):
-    return ((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**0.5
+    R = 6367
+    x = toRad(p2[0]-p1[0])
+    y = toRad(p2[1]-p1[1])
+    l1, l2 = toRad(p1[0]), toRad(p2[0])
+
+    a = math.sin(x/2.0)**2 + (math.sin(y/2.0)**2) * math.cos(l1) * math.cos(l2)
+    b = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    d = R * b
+    return d
 
 def sync_contacts(self_id, list_contacts, location):
     global timeout, all_contacts
