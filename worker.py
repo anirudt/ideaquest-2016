@@ -125,7 +125,7 @@ def sync_contacts(self_id, list_contacts, location):
     all_contacts = list(set(all_contacts))
     with open('people.json', 'wb') as g:
         json.dump(people, g)
-    return list_contacts, False
+    return "contacts sent", False
 
 
 def fetch_friends_location(self_id, location):
@@ -278,6 +278,9 @@ def handle_notifs(self_id):
     with open('people.json', 'rb') as g:
         people = json.load(g)
     print "Notification Change"
+    if not people.has_key(self_id):
+        print "Contacts not synced. Proceed."
+        return ["no"], False
     people[self_id]['online'] = 1
     people[self_id]['time_updated'] = now = time.time()
 

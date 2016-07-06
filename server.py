@@ -41,7 +41,7 @@ elif len(sys.argv) > 1:
 else:
     # Since it is a HTTPS server now, the 
     # default port is 443.
-    PORT = 443
+    PORT = 8000
     I = ""
 
 """
@@ -202,9 +202,9 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         # We will need location and contact number (ID) for any action!
         px, py = "", ""
-        if form['px'].value != "":
+        if form.has_key('px') and form['px'].value != "":
             px = float(form['px'].value)
-        if form['py'].value != "":
+        if form.has_key("py") and form['py'].value != "":
             py = float(form['py'].value)
         if px == "" and py == "":
             location = None
@@ -235,29 +235,18 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
 class SecureThreadedHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
-    def __init__(self, server_address, HandlerClass):
-        BaseServer.__init__(self, server_address, HandlerClass)
-        ctx = SSL.Context(SSL.SSLv23_METHOD)
-        #server.pem's location (containing the server private key and
-        #the server certificate).
-        fpem = 'certs/server.pem'
-        ctx.use_privatekey_file (fpem)
-        ctx.use_certificate_file(fpem)
-        self.socket = SSL.Connection(ctx, socket.socket(self.address_family,
-            self.socket_type))
-        self.server_bind()
-        self.server_activate()
-
-    def shutdown_request(self, request):
-        request.shutdown()
+    """"Nothing"""
 
 def main(timeout_mins):
+
     Handler = ServerHandler
 
-    httpd = SecureThreadedHTTPServer(("", PORT), Handler)
+    httpd = SocketServer.TCPServer(("", PORT), Handler)
 
-    print "Python https server version 0.1"
-    print "Serving at https://%(interface)s:%(port)s" % dict(interface=I or "localhost", port=PORT)
+    print "@rochacbruno Python http server version 0.1 (for testing purposes only)"
+    print "Serving at: http://%(interface)s:%(port)s" % dict(interface=I or "localhost", port=PORT)
+    httpd.serve_forever()
+    
     tick = time.time()
     thread.start_new_thread(httpd.serve_forever,())
     while 1:
@@ -266,5 +255,6 @@ def main(timeout_mins):
             httpd.shutdown()
             break
 
+
 if __name__ == "__main__":
-    main(100)
+    main(10000)
