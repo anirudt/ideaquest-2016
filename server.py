@@ -198,8 +198,15 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         review = ""
         if form.has_key('contact_file') and form['contact_file'].value != '':
             ret = json.loads(form['contact_file'].value)
-            list_contacts = ret
-
+            unproc_list_contacts = ret
+        
+        tmp = ""
+        # Processing for standardising the contacts.
+        for contact in unproc_list_contacts:
+            tmp = contact.replace("+", "")
+            tmp = tmp.replace("-", "")
+            tmp = tmp.replace(" ", "")
+            list_contacts.append(tmp[-10:])
         # We will need location and contact number (ID) for any action!
         px, py = "", ""
         if form.has_key('px') and form['px'].value != "":
