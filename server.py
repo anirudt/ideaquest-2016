@@ -107,7 +107,7 @@ def process_args(bool_args, self_id, location, review, list_contacts):
         try:
             # For now, we do exactly what we are doing for case 1
             # TODO: WOrk on an alternative approach
-            ret = worker.sos_call(self_id, location, bool_args[4], bool_args[5], bool_args[6])
+            ret = worker.sos_call(self_id, bool_args[4], bool_args[5], bool_args[6])
         # Send Save Our Souls Call
         finally:
             mutex_db_1.release()

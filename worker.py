@@ -22,8 +22,8 @@ set_alarm_med           = False
 set_alarm_high          = False
 alarm_self_id           = ""
 alarm_location          = (0.0, 0.0)
-alarm_radius_small      = 10
-alarm_radius_large      = 20
+alarm_radius_small      = 50
+alarm_radius_large      = 100
 selected_alarm_radius   = 0
 selected_alarm_contacts = []
 allowable_helpers       = 0
@@ -79,10 +79,13 @@ def distance(p1, p2):
     R = 6367
     x = toRad(p2[0]-p1[0])
     y = toRad(p2[1]-p1[1])
-    l1, l2 = toRad(p1[0]), toRad(p2[0])
+    l1 = toRad(p1[0])
+    l2 = toRad(p2[0])
 
-    a = math.sin(x/2.0)**2 + (math.sin(y/2.0)**2) * math.cos(l1) * math.cos(l2)
+    a = math.sin(x/2.0)*math.sin(x/2.0) + (math.sin(y/2.0)*math.sin(y/2.0)) * math.cos(l1) * math.cos(l2)
+    print a
     b = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    print b
     d = R * b
     return d
 
@@ -293,20 +296,24 @@ def handle_notifs(self_id):
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
     location = people[self_id]['location']
-    if location is None:
-        print "Location not updated yet. Will check for SOS on next retry."
-        return ["no"], False
     # TODO: Place a caveat as a guard condition
     with open('people.json', 'wb') as g:
         json.dump(people, g)
     response = {}
+    if location is None or alarm_location is None:
+        print "Location not updated yet. Will check for SOS on next retry."
+        return ["no"], False
     print "alarm = ", alarm_self_id
     if (set_alarm_low or set_alarm_med or set_alarm_high) and self_id != alarm_self_id:
         # Check if alarm is set and this is another person
 
         # Check if the person is in the allowable list of contacts and is within the 
         # acceptable circle.
+        print selected_alarm_contacts
+
         if self_id in selected_alarm_contacts:
+            print "In"
+            print alarm_location, location, distance(alarm_location, location), selected_alarm_radius
             if distance(alarm_location, location) <= selected_alarm_radius:
                 # This person could be our helper.
                 print "Danger, Help the person!"
@@ -318,13 +325,14 @@ def handle_notifs(self_id):
                 return response, True
     return ["ok"], False
 
-def sos_call(self_id, location, low, med, high):
+def sos_call(self_id, low, med, high):
     global set_alarm_low, set_alarm_med, set_alarm_high, alarm_radius_small, selected_alarm_radius, \
             alarm_radius_large, selected_alarm_contacts, alarm_location, alarm_self_id, all_contacts
     # When this happens, reassure the person who wants help
     with open('people.json', 'rb') as g:
         people = json.load(g)
     help_msg = "We are dispatching help. Please stay calm and be alert."
+    location = people[self_id]['location']
     if low == "on":
         set_alarm_low = True
         selected_alarm_radius = alarm_radius_small
