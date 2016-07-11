@@ -300,6 +300,7 @@ def handle_notifs(self_id):
     with open('people.json', 'wb') as g:
         json.dump(people, g)
     response = {}
+    print "Alarm status ", set_alarm_low, set_alarm_med, set_alarm_high
     if location is None or alarm_location is None:
         print "Location not updated yet. Will check for SOS on next retry."
         return ["no"], False
