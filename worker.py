@@ -6,13 +6,14 @@ import json
 import pdb
 import operator
 import math
+from datetime import datetime
 
 """
 Some DEFINES
 """
 review_threshold  = 10
 friends_threshold = 5
-timeout           = 1000
+timeout           = 120
 all_contacts      = []
 
 """ Alarm DEFINES """
@@ -206,7 +207,9 @@ def fetch_reviews_location(self_id, location):
                 print str(list(locn))
                 info['self_id'] = idx
                 info['review']  = reviews[str_locn][idx][0]
-                info['time']    = reviews[str_locn][idx][1]
+                print idx
+                print reviews[str_locn][idx]
+                info['time']    = datetime.fromtimestamp(reviews[str_locn][idx][1]).strftime('%Y-%m-%d %H:%M:%S')
                 tmp['info'].append(info)
             tmp['lat'] = locn[0]
             tmp['lon'] = locn[1]
@@ -290,6 +293,10 @@ def handle_notifs(self_id):
             people[f]['online'] = 0
             people[f]['time_updated'] = time.time()
     location = people[self_id]['location']
+    if location is None:
+        print "Location not updated yet. Will check for SOS on next retry."
+        return ["no"], False
+    # TODO: Place a caveat as a guard condition
     with open('people.json', 'wb') as g:
         json.dump(people, g)
     response = {}
