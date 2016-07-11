@@ -338,11 +338,11 @@ def sos_call(self_id, low, med, high):
         set_alarm_low = True
         selected_alarm_radius = alarm_radius_small
         selected_alarm_contacts = people[self_id]['friends']
-    elif low == "on":
+    elif med == "on":
         set_alarm_med = True
         selected_alarm_radius = alarm_radius_small
         selected_alarm_contacts = people[self_id]['friends']
-    elif low == "on":
+    elif high == "on":
         set_alarm_high = True
         selected_alarm_radius = alarm_radius_large
         selected_alarm_contacts = all_contacts
