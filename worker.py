@@ -280,7 +280,7 @@ def sync_location(self_id, location):
     return ["ok"], False
 
 def handle_notifs(self_id):
-    global timeout, set_alarm, alarm_location, selected_alarm_radius, selected_alarm_contacts, alarm_self_id
+    global timeout, set_alarm, alarm_location, selected_alarm_radius, selected_alarm_contacts, alarm_self_id, set_alarm_low, set_alarm_high, set_alarm_med
     with open('people.json', 'rb') as g:
         people = json.load(g)
     print "Notification Change"
