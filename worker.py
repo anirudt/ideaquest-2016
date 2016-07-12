@@ -230,8 +230,6 @@ def fetch_reviews_location(self_id, location):
     print nearby_reviews
     with open('people.json', 'wb') as g:
         json.dump(people, g)
-    with open('reviews.json', 'wb') as g:
-        json.dump({str(k): v for k, v in reviews.iteritems()}, g)
 
     return nearby_reviews, False
 
